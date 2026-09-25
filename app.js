@@ -14,21 +14,37 @@
     const angle = -Math.PI/2 + i * Math.PI*2/count;
     return `<circle class="ten-dot" cx="${(cx+Math.cos(angle)*r).toFixed(2)}" cy="${(cy+Math.sin(angle)*r).toFixed(2)}" r="${radius}"/>`;
   }).join('');
-  const tenSvg = (size=54, interactive=false, index=0) => `<svg class="unit-svg" ${interactive ? `role="button" tabindex="0" aria-label="Open this group of ten" data-open-ten="${index}"` : 'aria-hidden="true"'} width="${size}" height="${size}" viewBox="0 0 54 54"><circle class="ten-circle" cx="27" cy="27" r="24"/>${dots(27,27,14)}</svg>`;
+  const tenSvg = (size=54, interactive=false, index=0, count=index+1) => `<svg class="unit-svg" ${interactive ? `role="button" tabindex="0" aria-label="Open ten group ${count}" data-open-ten="${index}"` : 'aria-hidden="true"'} width="${size}" height="${size}" viewBox="0 0 54 54"><circle class="ten-circle" cx="27" cy="27" r="24"/>${dots(27,27,14)}<text class="unit-value" x="27" y="30.5">${count}</text></svg>`;
   const hundredSvg = (size=90, interactive=false, index=0) => {
     const positions = Array.from({length:10},(_,i)=>[27+Math.cos(-Math.PI/2+i*Math.PI*2/10)*16,27+Math.sin(-Math.PI/2+i*Math.PI*2/10)*16]);
     const groups = positions.map(([x,y])=>`<g><circle class="nested-ten" cx="${x}" cy="${y}" r="5.6"/>${dots(x,y,3.1,10,.75)}</g>`).join('');
-    return `<svg class="unit-svg" ${interactive ? `role="button" tabindex="0" aria-label="Open this hundred into ten groups" data-open-hundred="${index}"` : 'aria-hidden="true"'} width="${size}" height="${size}" viewBox="0 0 54 54"><circle class="hundred-circle" cx="27" cy="27" r="26"/>${groups}</svg>`;
+    return `<svg class="unit-svg" ${interactive ? `role="button" tabindex="0" aria-label="Open hundred ${index+1} into ten groups" data-open-hundred="${index}"` : 'aria-hidden="true"'} width="${size}" height="${size}" viewBox="0 0 54 54"><circle class="hundred-circle" cx="27" cy="27" r="26"/>${groups}<text class="hundred-value" x="27" y="29">${index+1}</text></svg>`;
   };
-  const dotSvg = (size=20) => `<svg class="unit-svg" aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 20 20"><circle class="one-dot" cx="10" cy="10" r="7.2"/></svg>`;
-  const dotsHTML = n => Array.from({length:n},()=>'<span class="dot-small"></span>').join('');
-  const tensHTML = (n,size=42) => Array.from({length:n},(_,i)=>tenSvg(size,false,i)).join('');
+  const dotSvg = (size=24,label=1) => `<svg class="unit-svg" aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24"><circle class="one-dot" cx="12" cy="12" r="10"/><text class="one-value" x="12" y="15">${label}</text></svg>`;
+  const dotsHTML = n => {
+    const rows=[];
+    for(let offset=0;offset<n;offset+=10){
+      const items=Array.from({length:Math.min(10,n-offset)},(_,i)=>`<span class="dot-small">${i+1}</span>`).join('');
+      rows.push(`<div class="count-row ones-row">${items}</div>`);
+    }
+    return rows.join('');
+  };
+  const oneRowsHTML = n => {
+    const rows=[];
+    for(let offset=0;offset<n;offset+=10)rows.push(`<div class="count-row ones-row">${Array.from({length:Math.min(10,n-offset)},(_,i)=>dotSvg(24,i+1)).join('')}</div>`);
+    return rows.join('');
+  };
+  const tensHTML = (n,size=42) => {
+    const rows=[];
+    for(let offset=0;offset<n;offset+=5)rows.push(`<div class="count-row tens-row">${Array.from({length:Math.min(5,n-offset)},(_,i)=>tenSvg(size,false,i,i+1)).join('')}</div>`);
+    return rows.join('');
+  };
   const hundredsHTML = (n,size=76) => Array.from({length:n},(_,i)=>hundredSvg(size,false,i)).join('');
 
   function renderBuilder() {
     $('hundreds-units').innerHTML = model.hundreds ? hundredsHTML(model.hundreds,91).replaceAll('aria-hidden="true"','role="img" aria-label="one hundred"') : '<span class="empty-note">No hundreds</span>';
     $('tens-units').innerHTML = model.tens ? Array.from({length:model.tens},(_,i)=>tenSvg(50,true,i)).join('') : '<span class="empty-note">No tens</span>';
-    $('ones-units').innerHTML = model.ones ? Array.from({length:model.ones},()=>dotSvg()).join('') : '<span class="empty-note">No loose ones</span>';
+    $('ones-units').innerHTML = model.ones ? oneRowsHTML(model.ones) : '<span class="empty-note">No loose ones</span>';
     $('hundreds-count').textContent=model.hundreds;$('tens-count').textContent=model.tens;$('ones-count').textContent=model.ones;
     $('make-ten').hidden=model.ones<10;$('make-hundred').hidden=model.tens<10;
     const parts=[];if(model.hundreds)parts.push(`${model.hundreds} ${model.hundreds===1?'hundred':'hundreds'}`);if(model.tens)parts.push(`${model.tens} ${model.tens===1?'ten':'tens'}`);if(model.ones||!parts.length)parts.push(`${model.ones} ${model.ones===1?'one':'ones'}`);
@@ -73,7 +89,7 @@
     const cell=(place,content,extra='')=>`<div class="operand-cell place-${place} ${extra}">${content}</div>`;
     const operandRow=(label,units,canRegroup=false)=>{
       const h=canRegroup?Array.from({length:units.hundreds},(_,i)=>hundredSvg(78,true,i).replaceAll('data-open-hundred=','data-borrow-hundred=').replace('Open this hundred','Double-click to open this hundred')):hundredsHTML(units.hundreds);
-      const t=canRegroup?Array.from({length:units.tens},(_,i)=>tenSvg(42,true,i).replaceAll('data-open-ten=','data-borrow-ten=').replace('Open this group of ten','Double-click to open this group of ten')):tensHTML(units.tens);
+      const t=canRegroup?Array.from({length:Math.ceil(units.tens/5)},(_,row)=>`<div class="count-row tens-row">${Array.from({length:Math.min(5,units.tens-row*5)},(_,i)=>{const index=row*5+i;return tenSvg(42,true,index,i+1).replaceAll('data-open-ten=','data-borrow-ten=');}).join('')}</div>`).join(''):tensHTML(units.tens);
       return `<div class="operand-row ${canRegroup?'regroup-row':''}"><div class="operand-label">${label}</div>${cell('hundreds',h)}${cell('tens',t)}${cell('ones',dotsHTML(units.ones))}</div>`;
     };
     const pendingTen=pending==='ten'?`<svg class="unit-svg pending-unit" data-pending-unit="ten" role="button" tabindex="0" aria-label="Ten dots grouped in Ones. Drag or tap to move to Tens." width="58" height="58" viewBox="0 0 54 54"><circle class="ten-circle" cx="27" cy="27" r="24"/>${dots(27,27,14)}</svg>`:'';
