@@ -14,4 +14,20 @@
 .count-row{display:flex;flex:0 0 100%;width:100%;flex-wrap:nowrap;justify-content:center;align-items:center;gap:4px}
 .ones-row .dot-small{flex:0 0 20px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:#dc8a6e;color:#fff;font-size:7px;font-weight:700;line-height:1;border:1px solid #fff;box-shadow:0 0 0 1px #e9c8ba}
 .tens-row .unit-svg{flex:0 0 auto}
+.step-equation{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.written-source{display:flex;flex-direction:column;gap:2px}
+.written-source b{font-weight:600}
+.written-source small{font:500 11px 'DM Sans',sans-serif;color:#829084}
+.written-answer{padding-left:12px;border-left:1px solid #d4e2d0}
+.algorithm-card[hidden]{display:none}
+.vertical-sum{width:135px}
+.sum-top{justify-content:flex-end;gap:8px}
+.sum-top>.sum-column{flex:1}
+.sum-digits{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex:1;text-align:center}
+.sum-digits i{font-style:normal}
+.vertical-sum .sum-bottom{position:relative;display:block}
+.vertical-sum .sum-bottom>b{position:absolute;left:-12px;top:0}
+.vertical-sum .sum-bottom>.sum-digits{width:100%}
+.original-digit{position:relative;display:inline-block;min-width:.7em;text-align:center}
+.original-digit.crossed-out::after{content:'';position:absolute;left:50%;top:50%;width:1.05em;height:1px;background:#c47a5f;transform:translate(-50%,-50%) rotate(-55deg);pointer-events:none}
 @media(max-width:700px){.count-row{justify-content:flex-start;overflow-x:auto;scrollbar-width:thin}.ones-row{gap:3px}}

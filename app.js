@@ -75,7 +75,7 @@
   function startProblem(operation=mode) {
     const a=clamp($('minuend-input').value),maxB=operation==='take'?a:999-a,b=clamp($('subtrahend-input').value,maxB);
     $('minuend-input').value=a;$('subtrahend-input').value=b;answer.hundreds=answer.tens=answer.ones=0;pending=null;
-    problem={operation,a,b,target:operation==='take'?a-b:a+b,starting:{hundreds:Math.floor(a/100),tens:Math.floor(a%100/10),ones:a%10}};
+    problem={operation,a,b,target:operation==='take'?a-b:a+b,regrouped:false,writtenUnlocked:false,starting:{hundreds:Math.floor(a/100),tens:Math.floor(a%100/10),ones:a%10}};
     $('operation-title').textContent=operation==='take'?'Take away':'Put together';
     $('operation-copy').textContent=operation==='take'?'Use the groups to find what remains.':'Bring the two numbers together and build the total.';
     $('operation-symbol').textContent=operation==='take'?'−':'+';$('mental-card').hidden=operation==='put';
@@ -108,10 +108,15 @@
     $('step-badge').textContent='BUILD YOUR ANSWER';$('step-progress').textContent=operation==='take'?'Use both rows to work out what remains.':'Bring both numbers together.';
     $('step-prompt').textContent=pending==='ten'?'You grouped 10 dots into one ten. Drag it from Ones to Tens, or tap it to move.':pending==='hundred'?'You grouped 10 tens into one hundred. Drag it from Tens to Hundreds, or tap it to move.':operation==='take'?'Build the amount left in the third row. Double-click or double-tap a whole ten or hundred in the first row to regroup it.':'Build the total in the third row. Add dots, group ten dots into a ten, then group ten tens into a hundred.';
     const terms=[];if(answer.hundreds)terms.push(`${answer.hundreds} ${answer.hundreds===1?'hundred':'hundreds'}`);if(answer.tens)terms.push(`${answer.tens} ${answer.tens===1?'ten':'tens'}`);if(answer.ones)terms.push(`${answer.ones} ${answer.ones===1?'one':'ones'}`);if(pending)terms.push(pending==='ten'?'1 ten waiting in Ones':'1 hundred waiting in Tens');
-    const startTerms=[];if(first.hundreds)startTerms.push(`${first.hundreds} hundreds`);if(first.tens)startTerms.push(`${first.tens} tens`);if(first.ones||!startTerms.length)startTerms.push(`${first.ones} ones`);
-    $('step-equation').textContent=`${operation==='take'?`${a} = ${startTerms.join(' + ')} · `:''}${terms.length?terms.join(' + '):'Your answer is empty'}${value?' = '+value:''}`;
+    const startTerms=[];if(first.hundreds)startTerms.push(`${first.hundreds} ${first.hundreds===1?'hundred':'hundreds'}`);if(first.tens)startTerms.push(`${first.tens} ${first.tens===1?'ten':'tens'}`);if(first.ones||!startTerms.length)startTerms.push(`${first.ones} ${first.ones===1?'one':'ones'}`);
+    const expandedStart=[];if(first.hundreds)expandedStart.push(first.hundreds*100);if(first.tens)expandedStart.push(first.tens*10);if(first.ones||!expandedStart.length)expandedStart.push(first.ones);
+    const sourceEquation=operation==='take'?`<span class="written-source"><b>${a} = ${startTerms.join(' + ')}</b><small>${a} = ${expandedStart.join(' + ')}</small></span>`:'';
+    const answerEquation=`<span class="written-answer">${terms.length?terms.join(' + '):'Your answer is empty'}${value?' = '+value:''}</span>`;
+    $('step-equation').innerHTML=`${sourceEquation}${answerEquation}`;
     $('step-action').innerHTML='<button class="button primary small" id="check-answer">Check answer <span>→</span></button><button class="button soft small" id="clear-answer">Clear answer</button>';
-    $('algorithm-card').hidden=true;
+    const showWritten=problem.writtenUnlocked||(operation==='take'&&problem.regrouped);
+    $('algorithm-card').hidden=!showWritten;
+    if(showWritten)updateWrittenBridge();
 
     $('take-board').querySelectorAll('[data-answer-action]').forEach(button=>button.addEventListener('click',()=>{
       const action=button.dataset.answerAction;
@@ -126,14 +131,14 @@
     $('clear-answer').addEventListener('click',()=>{answer.hundreds=answer.tens=answer.ones=0;pending=null;$('algorithm-card').hidden=true;renderOperation();});
     $('check-answer').addEventListener('click',()=>{
       if(pending){$('step-progress').textContent='Move the whole group first.';$('step-prompt').textContent=pending==='ten'?'Drag or tap the grouped ten into Tens.':'Drag or tap the grouped hundred into Hundreds.';}
-      else if(value===target){$('step-progress').textContent='That matches the two numbers.';$('step-prompt').textContent=`Yes. ${a} ${operation==='take'?'−':'+'} ${b} = ${target}. You built it using place-value groups.`;$('take-reflection').textContent='Can you explain how the groups in your answer match the two rows?';if(operation==='take'&&a===32&&b===18)showWrittenBridge();}
+      else if(value===target){$('step-progress').textContent='That matches the two numbers.';$('step-prompt').textContent=`Yes. ${a} ${operation==='take'?'−':'+'} ${b} = ${target}. You built it using place-value groups.`;$('take-reflection').textContent='Can you explain how the groups in your answer match the two rows?';showWrittenBridge();}
       else{$('step-progress').textContent='Keep exploring the groups.';$('step-prompt').textContent='Check the amount you built. Add or remove dots, and regroup complete groups of ten.';}
     });
     $('take-reflection').textContent=operation==='take'?'What could you change without changing the total?':'What could you combine without changing the total?';
     const board=$('take-board');
     const openBorrowUnit=unit=>{
-      if(unit.matches('[data-borrow-ten]')&&problem.starting.tens>0){problem.starting.tens--;problem.starting.ones+=10;renderOperation();}
-      else if(unit.matches('[data-borrow-hundred]')&&problem.starting.hundreds>0){problem.starting.hundreds--;problem.starting.tens+=10;renderOperation();}
+      if(unit.matches('[data-borrow-ten]')&&problem.starting.tens>0){problem.starting.tens--;problem.starting.ones+=10;problem.regrouped=true;renderOperation();}
+      else if(unit.matches('[data-borrow-hundred]')&&problem.starting.hundreds>0){problem.starting.hundreds--;problem.starting.tens+=10;problem.regrouped=true;renderOperation();}
     };
     board.ondblclick=e=>{const unit=e.target.closest('[data-borrow-ten],[data-borrow-hundred]');if(unit)openBorrowUnit(unit);};
     let lastTouchUnit=null,lastTouchAt=0;
@@ -154,7 +159,33 @@
   }
 
   function movePending(kind){if(pending!==kind)return;if(kind==='ten'){pending=null;answer.tens++;}else{pending=null;answer.hundreds++;}renderOperation();}
-  function showWrittenBridge(){ $('algorithm-card').hidden=false;$('algorithm-explanation').textContent='3 tens became 2 tens. 2 ones became 12 ones. We renamed 32; its value stayed the same.';$('alg-original-tens').textContent='3';$('alg-original-ones').textContent='2';$('alg-subtrahend').textContent='18';$('alg-answer').textContent='14';$('alg-tens-mark').textContent='2';$('alg-ones-mark').textContent='12'; }
+  function showWrittenBridge(){problem.writtenUnlocked=true;$('algorithm-card').hidden=false;updateWrittenBridge();}
+  function updateWrittenBridge(){
+    if(!problem)return;
+    const {operation,a,b,target,starting}=problem;
+    const original={hundreds:Math.floor(a/100),tens:Math.floor(a%100/10),ones:a%10};
+    const second={hundreds:Math.floor(b/100),tens:Math.floor(b%100/10),ones:b%10};
+    const result={hundreds:Math.floor(target/100),tens:Math.floor(target%100/10),ones:target%10};
+    const subDigits={...second};
+    for(const place of ['hundreds','tens','ones']){
+      const changed=starting[place]!==original[place];
+      $(`alg-${place}-mark`).textContent=changed?starting[place]:'';
+      const originalDigit=$(`alg-original-${place}`);
+      originalDigit.textContent=(place==='hundreds'&&!original.hundreds)||(place==='tens'&&!original.hundreds&&!original.tens)?'':original[place];
+      originalDigit.classList.toggle('crossed-out',changed);
+      $(`alg-sub-${place}`).textContent=(place==='hundreds'&&!subDigits.hundreds)||(place==='tens'&&!subDigits.hundreds&&!subDigits.tens)?'':subDigits[place];
+      $(`alg-answer-${place}`).textContent=(place==='hundreds'&&!result.hundreds)||(place==='tens'&&!result.hundreds&&!result.tens)?'':result[place];
+    }
+    $('alg-operation-symbol').textContent=operation==='take'?'−':'+';
+    $('algorithm-title').textContent=operation==='take'?'We renamed the starting number.':'We combined the groups.';
+    if(operation==='take'){
+      const parts=[];
+      if(starting.hundreds)parts.push(`${starting.hundreds} ${starting.hundreds===1?'hundred':'hundreds'}`);
+      if(starting.tens)parts.push(`${starting.tens} ${starting.tens===1?'ten':'tens'}`);
+      if(starting.ones||!parts.length)parts.push(`${starting.ones} ${starting.ones===1?'one':'ones'}`);
+      $('algorithm-explanation').textContent=`${a} is now ${parts.join(' + ')}. The value stays ${a}.`;
+    }else $('algorithm-explanation').textContent=`${a} + ${b} = ${target}. The written columns show the same hundreds, tens, and ones.`;
+  }
 
   $('start-problem').addEventListener('click',()=>startProblem(mode));
   $('minuend-input').addEventListener('keydown',e=>{if(e.key==='Enter')startProblem(mode);});
