@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f6f8f4" />
+  <title>Number Garden · Place Value</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Number Garden home"><span class="brand-mark">✳</span><span>number garden</span></a>
+      <div class="top-note"><span class="sun-dot"></span> A place to explore numbers</div>
+    </header>
+    <section class="intro">
+      <div><p class="eyebrow">PLACE VALUE · REGROUPING</p><h1>Numbers can be<br class="mobile-break" /> made many ways.</h1><p class="intro-copy">Build, open, and regroup. The number stays the same.</p></div>
+      <div class="seed-art" aria-hidden="true"><i></i><i></i><i></i><b>✳</b></div>
+    </section>
+    <nav class="mode-tabs" aria-label="Learning mode">
+      <button class="tab active" data-mode="build"><span>◉</span> Build a Number</button>
+      <button class="tab" data-mode="take"><span>↘</span> Take Away</button>
+      <button class="tab" data-mode="put"><span>＋</span> Put Together</button>
+    </nav>
+    <section id="build-view" class="workspace">
+      <div class="control-row">
+        <div class="number-entry"><label for="number-input">Choose a number</label><div class="input-wrap"><input id="number-input" type="number" min="0" max="999" value="32" inputmode="numeric" /><button id="show-number" class="button primary">Show it <span>→</span></button></div></div>
+        <div class="quick-actions"><button id="add-one" class="button soft">＋ Add a dot</button><button id="reset-build" class="text-button">Reset</button></div>
+      </div>
+      <div id="builder-hint" class="hint-line"><span class="hint-icon">✦</span><span>Tap a whole group to open it. Its value becomes smaller groups.</span></div>
+      <div class="place-board" id="place-board" aria-label="Place value model">
+        <div class="place-column hundreds"><div class="column-heading"><span class="column-symbol">100</span><div><h2>Hundreds</h2><p>big groups</p></div><span class="unit-count" id="hundreds-count">0</span></div><div class="units" id="hundreds-units"></div></div>
+        <div class="place-column tens"><div class="column-heading"><span class="column-symbol">10</span><div><h2>Tens</h2><p>groups of ten</p></div><span class="unit-count" id="tens-count">3</span></div><div class="units" id="tens-units"></div><button id="make-hundred" class="combine-button" hidden>Group 10 tens into a hundred <span>↑</span></button></div>
+        <div class="place-column ones"><div class="column-heading"><span class="column-symbol">1</span><div><h2>Ones</h2><p>single dots</p></div><span class="unit-count" id="ones-count">2</span></div><div class="units" id="ones-units"></div><button id="make-ten" class="combine-button" hidden>Group 10 ones into a ten <span>↑</span></button></div>
+      </div>
+      <div class="equation-card"><div class="equation-title"><span class="mini-spark">✳</span> SAME NUMBER, NEW NAME</div><div id="live-equation" class="equation">3 tens + 2 ones <span>=</span> 32</div><div id="expanded-equation" class="expanded-equation">32 = 30 + 2</div></div>
+      <div class="reflection"><span class="reflection-icon">?</span><p id="reflection-text">What could we change without changing the total?</p><span class="reflection-mark">↗</span></div>
+    </section>
+    <section id="take-view" class="workspace" hidden>
+      <div class="take-header"><div><p class="eyebrow">LET’S EXPLORE</p><h2 id="operation-title">Take away</h2><p id="operation-copy" class="intro-copy">Use the groups to find what remains.</p></div><div class="problem-picker"><label for="minuend-input">Try a problem</label><div class="problem-inputs"><input id="minuend-input" type="number" min="0" max="999" value="32" aria-label="First number" /><span id="operation-symbol">−</span><input id="subtrahend-input" type="number" min="0" max="999" value="18" aria-label="Second number" /><button id="start-problem" class="icon-button" aria-label="Start problem">→</button></div></div></div>
+      <div class="mental-card" id="mental-card"><div class="mental-copy"><span class="thought-icon">☁</span><div><strong>Have a guess?</strong><p>What do you think the answer is?</p></div></div><div class="mental-answer"><input id="guess-input" type="number" inputmode="numeric" placeholder="Your answer" aria-label="Your mental answer" /><button id="check-guess" class="button soft">Check</button><button id="skip-guess" class="text-button">Skip</button></div><div id="guess-feedback" class="guess-feedback" aria-live="polite"></div></div>
+      <div class="step-card" id="step-card"><div class="step-top"><span class="step-badge" id="step-badge">STEP 1</span><span class="step-progress" id="step-progress">Start with the whole number</span></div><div class="problem-display" id="problem-display">32 − 18 <span>= ?</span></div><p class="step-prompt" id="step-prompt">Here is 32. We need to take away 8 ones.</p><div class="take-board" id="take-board"></div><div class="step-equation" id="step-equation"></div><div class="step-action" id="step-action"></div></div>
+      <div class="algorithm-card" id="algorithm-card" hidden><div><p class="eyebrow">THE SAME IDEA, WRITTEN DOWN</p><h3>We renamed the number.</h3><p id="algorithm-explanation">3 tens became 2 tens. 2 ones became 12 ones. The value stayed 32.</p></div><div class="vertical-sum" aria-label="Vertical subtraction algorithm"><div class="sum-top"><span class="sum-column"><small class="regroup-mark" id="alg-tens-mark">2</small><span id="alg-original-tens">3</span></span><span class="sum-column"><small class="regroup-mark" id="alg-ones-mark">12</small><span id="alg-original-ones">2</span></span></div><div class="sum-bottom"><b>−</b><span id="alg-subtrahend">18</span></div><div class="sum-rule"></div><div class="sum-answer" id="alg-answer">14</div></div></div>
+      <div class="reflection"><span class="reflection-icon">?</span><p id="take-reflection">How can you make more ones without changing 32?</p><span class="reflection-mark">↗</span></div>
+    </section>
+    <footer><span>✳</span> Made for curious minds <span class="footer-leaf">·</span> Take your time.</footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
